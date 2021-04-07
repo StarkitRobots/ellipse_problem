@@ -52,5 +52,5 @@ def run_elipse(folder, filename, threshold, inlier, threshold_outlier_count,
 
 
 if __name__ == '__main__':
-    run_elipse("01", "img0087.jpg", 1.5, 50, 100, min_r=40, max_r=100)
+    run_elipse("01", "img0001.jpg", 1.5, 50, 100, min_r=40, max_r=100)
 

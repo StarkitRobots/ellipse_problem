@@ -26,9 +26,9 @@ class EllipseModel(object):
     #
     # Determine the center and radius of a circle which passes through the 3 points
     #
-    def general_equation(x, y):
-        x = float(x)
-        y = float(y)
+    def general_equation(xy):
+        x = float(xy[0])
+        y = float(xy[1])
         return [x ** 2, x * y, y ** 2, x, y]
 
     @classmethod
@@ -37,7 +37,7 @@ class EllipseModel(object):
         #if1 += 1
 
         ans = np.ones([5])
-        coef_curve = np.array([cls.general_equation(point.X, point.Y) for point in points])
+        coef_curve = np.array([cls.general_equation(point) for point in points])
         start_time = time.time()
         itog = np.linalg.solve(coef_curve, ans)
 
@@ -129,7 +129,7 @@ class EllipseModel(object):
 
     @classmethod
     def generate_points(cls, listp):
-        lst_points: List[pt.Point] = list()
+        lst_points = list()
         for idx in range(100, 200):
             lst_points.append(listp[idx])
 

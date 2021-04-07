@@ -17,7 +17,7 @@ def create_points_from_numpyimage(arr_image:np.ndarray):
                 continue
 
             y_cartesian=image_ht - y -1
-            p=Point(x,y_cartesian)
+            p=(x,y_cartesian)
             lst.append(p)
     return lst
 #

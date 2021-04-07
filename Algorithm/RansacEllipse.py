@@ -1,7 +1,6 @@
 from typing import List, Tuple
 import math
 import random
-from Algorithm import Point
 from Algorithm import EllipseModel
 import time
 import cv2
@@ -10,12 +9,12 @@ from scipy.spatial import ConvexHull
 
 
 class FiveOfPoints(object):
-    def __init__(self, p1: Point, p2: Point, p3: Point, p4: Point, p5: Point):
-        self.P1: Point = p1
-        self.P2: Point = p2
-        self.P3: Point = p3
-        self.P4: Point = p4
-        self.P5: Point = p5
+    def __init__(self, p1, p2, p3, p4, p5):
+        self.P1 =  p1
+        self.P2 =  p2
+        self.P3 = p3
+        self.P4 = p4
+        self.P5 = p5
 
     def return_five_points(self):
         return self.P1, self.P2, self.P3, self.P4, self.P5
@@ -35,9 +34,9 @@ class AngleEllipse(object):
         return self.status
 
 
-def get_angle(model: EllipseModel, p: Point):
-    si = p.X * model.B
-    co = p.Y * model.A
+def get_angle(model: EllipseModel, p):
+    si = p[0] * model.B
+    co = p[1] * model.A
     return (math.atan2(si, co) + math.pi) * 180 / math.pi
 
 
@@ -48,22 +47,22 @@ def compute_outlier_measure(distance, radius):
     return ratio
 
 
-def rot(p: Point, phi):
-    x = p.X * math.cos(phi) + p.Y * math.sin(phi)
-    y = - p.X * math.sin(phi) + p.Y * math.cos(phi)
-    return Point(x, y)
+def rot(p, phi):
+    x = p[0] * math.cos(phi) + p[1] * math.sin(phi)
+    y = - p[0] * math.sin(phi) + p[1] * math.cos(phi)
+    return (x, y)
 
 
-def change(p: Point, model: EllipseModel):
-    x = p.X - model.X
-    y = p.Y - model.Y
-    return Point(x, y)
+def change(p, model: EllipseModel):
+    x = p[0] - model.X
+    y = p[1] - model.Y
+    return (x, y)
 
 
 def conv(five):
     points = five.return_five_points()
 
-    points = [(p.X, p.Y) for p in points]
+    #points = [(p.X, p.Y) for p in points]
 
     points_hull = cv2.convexHull(np.array(points))
     if len(points_hull) < 5:
@@ -96,7 +95,7 @@ class RansacEllipse(object):
         self.min_r = 20
         self.max_r = 100
 
-    def add_points(self, points: List[Point]):
+    def add_points(self, points):
         self._all_points.extend(points)
 
     def validate_hyperparams(self):
@@ -159,7 +158,7 @@ class RansacEllipse(object):
         if4 = 0
         if5 = 0
         for five in fives:
-            if len(cv2.convexHull(np.array([(p.X, p.Y) for p in five.return_five_points()]))) < 5:
+            if len(cv2.convexHull(np.array(five.return_five_points()))) < 5:
                 continue
             #if five_index % 100 == 0:
                 #print("PROGRESS:Processing five %d of %d, shortlisted=%d  poor inliers=%d" % (
@@ -216,17 +215,17 @@ class RansacEllipse(object):
             n = 200
         print(int(len(points)))
         samp = int(len(points) - n)
-        for c in range(0, 3):
+        for c in range(0, 10):
 
             for j in range(0, samp, 1):
                 p0, p1, p2, p3, p4 = random.choices(points[j:j + n:1], k=5)
                 five = FiveOfPoints(p0, p1, p2, p3, p4)
                 lst.append(five)
 
-            for j in range(len(points), n, -1):
-                p0, p1, p2, p3, p4 = random.choices(points[j-n:j:1], k=5)
-                five = FiveOfPoints(p0, p1, p2, p3, p4)
-                lst.append(five)
+            # for j in range(len(points), n, -1):
+            #     p0, p1, p2, p3, p4 = random.choices(points[j-n:j:1], k=5)
+            #     five = FiveOfPoints(p0, p1, p2, p3, p4)
+            #     lst.append(five)
         for c in range(0, 3):
             p0, p1, p2, p3, p4 = random.choices(points[samp - 1:samp - 1 + n:1], k=5)
             five = FiveOfPoints(p0, p1, p2, p3, p4)
@@ -235,10 +234,10 @@ class RansacEllipse(object):
         return lst
         pass
 
-    def el_line(self, model: EllipseModel, p: Point):
+    def el_line(self, model: EllipseModel, p):
 
-        x2 = p.X
-        y2 = p.Y
+        x2 = p[0]
+        y2 = p[1]
 
         a = model.A
         b = model.B
@@ -266,7 +265,7 @@ class RansacEllipse(object):
             x_max = gran
         return x_min, x_max
 
-    def get_inliers(self, model: EllipseModel, exclude_points: List[Point]) -> Tuple[List[Point], float, int, float]:
+    def get_inliers(self, model: EllipseModel, exclude_points):
         start_time = time.time()
         Phi = model.Phi
         X = model.X
@@ -274,8 +273,7 @@ class RansacEllipse(object):
         all_points = self._all_points
         _all_points = self._points
         threshold = self.threshold_error
-        pt: Point
-        p: Point
+
         shortlist_inliners = list()
         inliners_r = list()
         sum_goodness_measure = 0
@@ -304,16 +302,16 @@ class RansacEllipse(object):
                 continue
                 # pt = p
 
-            xy = rot(Point(X, Y), Phi)
-            X = xy.X
-            Y = xy.Y
+            xy = rot((X, Y), Phi)
+            X = xy[0]
+            Y = xy[1]
             pt = change(p, model)
             pt = rot(pt, model.Phi)
             p1, p2, = self.el_line(model, pt)
 
-            distance_from_circumfrence = math.sqrt((pt.X - p1) ** 2 + (pt.Y - p2) ** 2)
+            distance_from_circumfrence = math.sqrt((pt[0] - p1) ** 2 + (pt[1] - p2) ** 2)
             distance = math.sqrt(p1 ** 2 + p2 ** 2)
-            distance_from_center = math.sqrt((pt.X) ** 2 + (pt.Y) ** 2)
+            distance_from_center = math.sqrt((pt[0]) ** 2 + (pt[1]) ** 2)
             threshold_r = distance * 0.5
             dist2 = math.sqrt((-p1) ** 2 + (-p2) ** 2)
             if (distance_from_circumfrence > threshold) and (distance_from_circumfrence < threshold_r):
@@ -324,7 +322,7 @@ class RansacEllipse(object):
             for i in anglesEllipse:
                 i.check_angle(get_angle(model, pt))
 
-            distance_from_center = math.sqrt((pt.X - X) ** 2 + (pt.Y - Y) ** 2)
+            distance_from_center = math.sqrt((pt[0] - X) ** 2 + (pt[1] - Y) ** 2)
             outlier_goodness_measure = compute_outlier_measure(distance_from_center, dist2)
             sum_goodness_measure += outlier_goodness_measure
 

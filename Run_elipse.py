@@ -3,7 +3,7 @@ import datetime
 import time
 import cv2
 
-from Algorithm import Util, EllipseModel, RansacEllipse
+from framework import Util, EllipseModel, RansacEllipse
 import traceback
 
 
@@ -37,6 +37,7 @@ def run_elipse(folder, filename, threshold, inlier, threshold_outlier_count,
         #
         now = datetime.datetime.now()
         file_result = ("%s-%s.png" % (filename, now.strftime("%Y-%m-%d-%H-%M-%S")))
+        file_result = 'output/'+file_result
         np_image = cv2.imread(file_noisy_circle, cv2.IMREAD_COLOR)
         new_points = EllipseModel.generate_points_from_circle(best_model)
         np_superimposed = Util.superimpose_points_on_image(np_image, new_points, 100, 255, 100)
@@ -52,5 +53,5 @@ def run_elipse(folder, filename, threshold, inlier, threshold_outlier_count,
 
 
 if __name__ == '__main__':
-    run_elipse("01", "img0087.jpg", 1.5, 50, 100, min_r=40, max_r=100)
+    run_elipse("data/01", "img0087.jpg", 1.5, 50, 100, min_r=40, max_r=100)
 

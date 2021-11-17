@@ -7,6 +7,7 @@ import time
 import cv2
 import numpy as np
 from scipy.spatial import ConvexHull
+from .Ransac import RANSAC
 
 
 class FiveOfPoints(object):
@@ -83,7 +84,7 @@ def co_angle(five):
         return True
     return False
 
-class RansacEllipse(object):
+class RansacEllipse(RANSAC):
 
     def __init__(self):
         self._all_points: List[Point] = list()
